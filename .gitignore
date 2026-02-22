@@ -1,0 +1,23 @@
+# Laravel Backend
+Backend/rawg-backend/vendor/
+Backend/rawg-backend/node_modules/
+Backend/rawg-backend/.env
+Backend/rawg-backend/storage/*.key
+Backend/rawg-backend/storage/logs/*.log
+Backend/rawg-backend/storage/framework/cache/*
+Backend/rawg-backend/storage/framework/sessions/*
+Backend/rawg-backend/storage/framework/views/*
+Backend/rawg-backend/bootstrap/cache/*
+Backend/rawg-backend/public/hot
+Backend/rawg-backend/public/storage
+
+# Next.js Frontend
+Frontend/rawg-frontend/node_modules/
+Frontend/rawg-frontend/.next/
+Frontend/rawg-frontend/out/
+Frontend/rawg-frontend/.env*.local
+Frontend/rawg-frontend/.vercel
+
+# OS files
+.DS_Store
+Thumbs.db
