@@ -1,61 +1,40 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import api from '@/lib/api';
-import type { Game } from '@/types';
-import GameCard from '@/components/GameCard';
+import Link from 'next/link';
+import RippleGrid from '@/components/RippleGrid';
 
-export default function Home() {
-  const [games, setGames] = useState<Game[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const response = await api.get('/games');
-        setGames(response.data.results);
-      } catch (err) {
-        setError('Failed to load.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGames();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='w-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin'/>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <p className='text-red-400'>{error}</p>
-      </div>
-    );
-  }
-
+export default function LandingPage() {
   return (
-    <main className='max-w-7xl mx-auto px-6 py-8'>
-      <h1 className='text-white text-2xl font-bold mb-6'>Browse Games</h1>
-
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-        {games.map((game) => (
-          <GameCard key={game.id} game={game}/>
-        ))}
-
+    <main className="relative h-screen flex items-center justify-center overflow-hidden">
+      
+      <div className="absolute inset-0">
+        <RippleGrid
+          enableRainbow={false}
+          gridColor="#48cae4"
+          rippleIntensity={0.01}
+          gridSize={10}
+          gridThickness={15}
+          mouseInteraction={false}
+          mouseInteractionRadius={1.2}
+          opacity={0.4}
+        />
       </div>
+
+      <div className="relative z-10 text-center px-6">
+        <h1 className="text-6xl font-bold text-white mb-4 tracking-tight">
+          RawG<span className="text-[#023e8a]">VaulT</span>
+        </h1>
+        <p className="text-zinc-400 text-lg mb-8 max-w-md mx-auto">
+          Where greatness is discovered, all in one place.
+        </p>
+        <Link
+          href="/home"
+          className="bg-gray-900 hover:bg-gray-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors duration-200 inline-block"
+        >
+          Browse Games →
+        </Link>
+      </div>
+
     </main>
-  )
-
-
-  
-  
-  
+  );
 }

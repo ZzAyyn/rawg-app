@@ -17,7 +17,7 @@ export default function Navbar() {
         <nav className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link href="/" className="text-white text-xl font-bold tracking-tight">
-                    RAWG-Vault
+                    RawGVaulT
                 </Link>
 
                 <div className="flex items-center gap-4">
