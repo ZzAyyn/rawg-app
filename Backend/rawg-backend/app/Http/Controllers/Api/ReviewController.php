@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class ReviewController extends Controller
 {
     public function index($gameId){
-        $game = Game::where('rawg_id', $gameId)->first();
+        $game = is_numeric($gameId) ? Game::where('rawg_id', $gameId) -> first() : Game::where('slug', $gameId)->first();
 
         if(!$game) {
             return response()->json([
