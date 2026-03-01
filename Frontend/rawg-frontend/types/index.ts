@@ -48,8 +48,9 @@ export interface Review {
     user_id: number;
     game_id: number;
     rating: number;
-    body: string;
+    review_text: string;
     created_at: string;
+    updated_at: string;
     user?: { id: number; name: string };
 }
 
