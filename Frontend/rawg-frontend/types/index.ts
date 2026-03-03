@@ -62,6 +62,7 @@ export interface Favourite {
     created_at: string;
     game?: {
         id: number;
+        rawg_id: number;
         name: string;
         slug: string;
         background_image: string | null;

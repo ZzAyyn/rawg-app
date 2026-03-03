@@ -104,12 +104,12 @@ export default function DashboardPage() {
     }
   };
 
-  const handleRemoveFavourite = async (gameId: number) => {
+  const handleRemoveFavourite = async (rawgId: number) => {
     try {
-      await api.delete(`/favourites/${gameId}`);
-      setFavourites((prev) => prev.filter((f) => f.game_id !== gameId));
-    } catch {
-      console.error("Failed to remove favourite");
+      await api.delete(`/favourites/${rawgId}`);
+      setFavourites((prev) => prev.filter((f) => f.game?.rawg_id !== rawgId));
+    } catch (e){
+      console.error("Failed to remove favourite", e);
     }
   };
 
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                       </div>
 
                       <button
-                        onClick={() => handleRemoveFavourite(favourite.game_id)}
+                        onClick={() => handleRemoveFavourite(favourite.game?.rawg_id ?? favourite.game_id)}
                         className="text-red-400 hover:text-red-300 text-sm transition-colors"
                       >
                         Remove
