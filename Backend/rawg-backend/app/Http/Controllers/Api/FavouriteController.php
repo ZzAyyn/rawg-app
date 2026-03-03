@@ -10,7 +10,9 @@ use App\Models\Game;
 class FavouriteController extends Controller
 {
     public function index(Request $request) {
-        $favourites = $request->user()->favouriteGames;
+        $favourites = Favourite::where('user_id', $request-> user() -> id)
+            ->with('game')
+            ->get();
 
         return response()->json($favourites);
     }
@@ -74,7 +76,7 @@ class FavouriteController extends Controller
             -> where('game_id', $game->id) 
             -> delete();
 
-        if ($deleted) {
+        if (!$deleted) {
             return response()->json([
                 'status'=> 'Favourite was not found',
             ], 404);

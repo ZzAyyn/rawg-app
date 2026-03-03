@@ -6,10 +6,12 @@ import api from "@/lib/api";
 import { Game, Review } from "@/types";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function GameDetailsPage() {
   const { slug } = useParams();
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [game, setGame] = useState<Game | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -22,6 +24,29 @@ export default function GameDetailsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  const [isFavourited, setIsFavourited] = useState(false);
+  const [isFavouriteLoading, setIsFavouriteLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !game) {
+      return;
+    }
+
+    const checkFavourite = async () => {
+      try {
+        const response = await api.get("/favourites");
+        const favourites = response.data;
+
+        const found = favourites.some((f: any) => f.game_id === game.id);
+        setIsFavourited(found);
+      } catch (e: any) {
+        console.error("Failed to check favourites", e);
+      }
+    };
+
+    checkFavourite();
+  }, [isAuthenticated, game]);
 
   // implementation to fetch game details
   useEffect(() => {
@@ -66,6 +91,35 @@ export default function GameDetailsPage() {
 
     fetchReviews();
   }, [slug]);
+
+  const handleFavouriteToggle = async () => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    setIsFavouriteLoading(true);
+    try {
+      if (isFavourited) {
+        await api.delete(`/favourites/${game?.id}`);
+        setIsFavourited(false);
+      } else {
+        await api.post("/favourites", {
+          rawg_id: game?.id,
+          name: game?.name,
+          slug: game?.slug,
+          background_image: game?.background_image,
+          rating: game?.rating,
+          released: game?.released,
+        });
+        setIsFavourited(true);
+      }
+    } catch (e: any) {
+      console.error("Failed to toggle favourite", e);
+    } finally {
+      setIsFavouriteLoading(false);
+    }
+  };
 
   const handleReviewSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -136,6 +190,22 @@ export default function GameDetailsPage() {
 
       <div className="mb-8">
         <h1 className="text-white text-4xl font-bold mb-3">{game.name}</h1>
+
+        <button
+          onClick={handleFavouriteToggle}
+          disabled={isFavouriteLoading}
+          className={`mb-4 px-5 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+            isFavourited
+              ? "bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-400"
+              : "bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-yellow-500/20 hover:border-yellow-500/40 hover:text-yellow-400"
+          }`}
+        >
+          {isFavouriteLoading
+            ? "..."
+            : isFavourited
+              ? "Favourited"
+              : "Add to Favourites"}
+        </button>
 
         <div className="flex flex-wrap gap-4 text-sm mb-4">
           <span className="text-yellow-400">
