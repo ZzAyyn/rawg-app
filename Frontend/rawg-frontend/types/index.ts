@@ -52,12 +52,20 @@ export interface Review {
     created_at: string;
     updated_at: string;
     user?: { id: number; name: string };
+    game?: { id: number; name: string; slug:string};
 }
 
 export interface Favourite {
     id: number;
     user_id: number;
     game_id: number;
+    created_at: string;
+    game?: {
+        id: number;
+        name: string;
+        slug: string;
+        background_image: string | null;
+    };
 }
 
 export interface PaginatedResponse<T> {
