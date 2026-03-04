@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from "react";
 import api from "@/lib/api";
 import type { Game, Genre, Platform } from "@/types";
 import GameCard from "@/components/GameCard";
-import { Smooch } from "next/font/google";
+import TrueFocus from "@/components/TrueFocus";
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
@@ -100,7 +100,16 @@ export default function Home() {
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-16">
-      <h2 className="text-white text-2xl font-bold mb-8">Browse Games</h2>
+      <div className="mb-7">
+        <TrueFocus
+          sentence="Browse Games"
+          manualMode={false}
+          blurAmount={5}
+          borderColor="#00FFFF"
+          animationDuration={0.5}
+          pauseBetweenAnimations={1}
+        />
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
         <input
@@ -181,7 +190,6 @@ export default function Home() {
 
       {!isLoadingGames && !gamesError && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-12">
-          
           {appliedFilters.page > 2 && (
             <button
               onClick={() => handlePageChange(1)}
@@ -192,7 +200,6 @@ export default function Home() {
             </button>
           )}
 
-          
           <button
             onClick={() => handlePageChange(appliedFilters.page - 1)}
             disabled={appliedFilters.page === 1}
@@ -201,7 +208,6 @@ export default function Home() {
             ‹ Prev
           </button>
 
-          
           <div className="flex items-center gap-1.5 px-2">
             <span className="text-zinc-500 text-sm">Page</span>
             <span className="text-white font-semibold text-sm">
@@ -211,7 +217,6 @@ export default function Home() {
             <span className="text-zinc-400 text-sm">{totalPages}</span>
           </div>
 
-          
           <button
             onClick={() => handlePageChange(appliedFilters.page + 1)}
             disabled={appliedFilters.page === totalPages}

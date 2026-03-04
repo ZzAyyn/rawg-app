@@ -37,9 +37,9 @@ class FavouriteController extends Controller
                 'description' => $request->description,
                 'background_image' => $request->background_image,
                 'rating' => $request->rating,
-                'released' => $request->released,
-                'platforms' => $request->platforms,
-                'genres' => $request->genres,
+                'released' => $request->released ? date('Y-m-d', strtotime(trim($request->released, '"'))) : null,
+                'platforms' => $request->platforms ? json_encode($request->platforms) : null,
+                'genres' => $request->genres ? json_encode($request->genres) : null,
             ]
         );
 

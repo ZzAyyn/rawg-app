@@ -22,7 +22,7 @@ class RawgService
 
     // no point in using above func, error fikus
 
-    public function getGames($page = 1, $pageSize = 20, $search = null, $ordering = null) {
+    public function getGames($page = 1, $pageSize = 20, $search = null, $ordering = null, $genres = null, $platforms = null) {
         $params = [
             'key' => $this->apiKey,
             'page' => $page,
@@ -35,6 +35,14 @@ class RawgService
 
         if ($ordering) {
             $params['ordering'] = $ordering;
+        }
+
+        if ($genres) {
+            $params['genres'] = $genres;
+        }
+
+        if ($platforms) {
+            $params['platforms'] = $platforms;
         }
 
         try {

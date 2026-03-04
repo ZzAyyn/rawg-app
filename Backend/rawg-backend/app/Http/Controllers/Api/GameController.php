@@ -20,6 +20,8 @@ class GameController extends Controller
             pageSize: $request->get('page_size', 20), 
             search: $request->get('search'),
             ordering: $request->get('ordering'),
+            genres: $request->get('genres'),
+            platforms: $request->get('platforms'),
         );
 
         if (!$games) {

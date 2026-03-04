@@ -26,8 +26,7 @@ class Game extends Model
         'platforms'=> 'array',
         'genres'=> 'array',
         'screenshots'=> 'array',
-        'ratings'=> 'array',
-        'released'=> 'array',
+        'released'=> 'date',
     ];
 
     public function favourites(){
