@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const [editRating, setEditRating] = useState<number>(5);
   const [editText, setEditText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
 
   // useEffect to fetch profile
   useEffect(() => {
@@ -139,15 +141,21 @@ export default function DashboardPage() {
   };
 
   const handleDeleteReview = async (reviewId: number) => {
-    if (!confirm("Are you sure you want to delete this review?")) {
+    setDeleteReviewId(reviewId);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!deleteReviewId) {
       return;
     }
 
     try {
-      await api.delete(`/reviews/${reviewId}`);
-      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      await api.delete(`/reviews/${deleteReviewId}`);
+      setReviews((prev) => prev.filter((r) => r.id !== deleteReviewId));
     } catch {
-      console.error("Failed to delete review");
+      console.error('Failed to delete review');
+    } finally {
+      setDeleteReviewId(null);
     }
   };
 
@@ -415,6 +423,38 @@ export default function DashboardPage() {
             </div>
           )}
         </main>
+
+        {deleteReviewId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setDeleteReviewId(null)}
+            />
+
+            <div className="relative bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm shadow-xl">
+              <h3 className="text-white text-lg font-semibold mb-2">Delete Review</h3>
+              <p className="text-zinc-400 text-sm mb-6">
+                Are you sure you want to delete this review? <span className="text-red-400 font-semibold">This action cannot be undone.</span>
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteReviewId(null)}
+                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteReview}
+                  className="flex-1 bg-red-700 hover:bg-red-500 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+        
       </ProtectedRoute>
     </div>
   );

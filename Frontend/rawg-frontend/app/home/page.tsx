@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import api from '@/lib/api';
-import type { Game, Genre, Platform } from '@/types';
-import GameCard from '@/components/GameCard';
+import { useState, useEffect, Fragment } from "react";
+import api from "@/lib/api";
+import type { Game, Genre, Platform } from "@/types";
+import GameCard from "@/components/GameCard";
+import { Smooch } from "next/font/google";
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
@@ -13,27 +14,33 @@ export default function Home() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
 
-  const [searchInput, setSearchInput] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [searchInput, setSearchInput] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
 
   const [appliedFilters, setAppliedFilters] = useState({
-    search: '',
-    genre: '',
-    platform: '',
+    search: "",
+    genre: "",
+    platform: "",
+    page: 1,
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   useEffect(() => {
     const fetchFilters = async () => {
       try {
         const [genresRes, platformsRes] = await Promise.all([
-          api.get('/genres'),
-          api.get('/platforms'),
+          api.get("/genres"),
+          api.get("/platforms"),
         ]);
         setGenres(genresRes.data.results);
         setPlatforms(platformsRes.data.results);
       } catch (err) {
-        console.error('Failed to load filters', err);
+        console.error("Failed to load filters", err);
       }
     };
 
@@ -46,40 +53,49 @@ export default function Home() {
       setGamesError(null);
 
       try {
-        const params: Record<string, string> = {};
+        const params: Record<string, string | number> = {};
         if (appliedFilters.search) params.search = appliedFilters.search;
         if (appliedFilters.genre) params.genres = appliedFilters.genre;
         if (appliedFilters.platform) params.platforms = appliedFilters.platform;
+        params.page = appliedFilters.page;
+        params.page_size = pageSize;
 
-        const response = await api.get('/games', { params });
+        const response = await api.get("/games", { params });
         setGames(response.data.results);
+        setTotalCount(response.data.count);
       } catch (err) {
-        setGamesError('Failed to load games.');
+        setGamesError("Failed to load games.");
       } finally {
         setIsLoadingGames(false);
       }
     };
 
     fetchGames();
-  }, [appliedFilters]); 
+  }, [appliedFilters]);
 
   const handleSearch = () => {
     setAppliedFilters({
       search: searchInput,
       genre: selectedGenre,
       platform: selectedPlatform,
+      page: 1,
     });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearch();
+    if (e.key === "Enter") handleSearch();
   };
 
   const handleClear = () => {
-    setSearchInput('');
-    setSelectedGenre('');
-    setSelectedPlatform('');
-    setAppliedFilters({ search: '', genre: '', platform: '' });
+    setSearchInput("");
+    setSelectedGenre("");
+    setSelectedPlatform("");
+    setAppliedFilters({ search: "", genre: "", platform: "", page: 1 });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setAppliedFilters((prev) => ({ ...prev, page: newPage }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -87,7 +103,6 @@ export default function Home() {
       <h2 className="text-white text-2xl font-bold mb-8">Browse Games</h2>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
-
         <input
           type="text"
           placeholder="Search games..."
@@ -130,7 +145,9 @@ export default function Home() {
           Search
         </button>
 
-        {(appliedFilters.search || appliedFilters.genre || appliedFilters.platform) && (
+        {(appliedFilters.search ||
+          appliedFilters.genre ||
+          appliedFilters.platform) && (
           <button
             onClick={handleClear}
             className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -159,6 +176,60 @@ export default function Home() {
           {games.map((game) => (
             <GameCard key={game.id} game={game} />
           ))}
+        </div>
+      )}
+
+      {!isLoadingGames && !gamesError && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-12">
+          
+          {appliedFilters.page > 2 && (
+            <button
+              onClick={() => handlePageChange(1)}
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-sm rounded-lg transition-colors"
+              title="First page"
+            >
+              «
+            </button>
+          )}
+
+          
+          <button
+            onClick={() => handlePageChange(appliedFilters.page - 1)}
+            disabled={appliedFilters.page === 1}
+            className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+          >
+            ‹ Prev
+          </button>
+
+          
+          <div className="flex items-center gap-1.5 px-2">
+            <span className="text-zinc-500 text-sm">Page</span>
+            <span className="text-white font-semibold text-sm">
+              {appliedFilters.page}
+            </span>
+            <span className="text-zinc-500 text-sm">of</span>
+            <span className="text-zinc-400 text-sm">{totalPages}</span>
+          </div>
+
+          
+          <button
+            onClick={() => handlePageChange(appliedFilters.page + 1)}
+            disabled={appliedFilters.page === totalPages}
+            className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+          >
+            Next ›
+          </button>
+
+          {/* Last page */}
+          {appliedFilters.page < totalPages - 1 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-sm rounded-lg transition-colors"
+              title="Last page"
+            >
+              »
+            </button>
+          )}
         </div>
       )}
     </main>
