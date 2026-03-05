@@ -1,4 +1,4 @@
-# GameVault - Game Discovery Platform
+# RawGVaulT - Game Discovery Platform
 
 A full-stack game discovery platform built with Laravel and Next.js, similar to RAWG.io. Users can browse games, search and filter by genre/platform, write reviews, and manage their favourite games.
 
