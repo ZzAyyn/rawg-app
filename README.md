@@ -1,4 +1,4 @@
-# RawGVaulT - Game Discovery Platform
+# RGVT - Game Discovery Platform
 
 A full-stack game discovery platform built with Laravel and Next.js, similar to RAWG.io. Users can browse games, search and filter by genre/platform, write reviews, and manage their favourite games.
 
@@ -6,7 +6,7 @@ A full-stack game discovery platform built with Laravel and Next.js, similar to 
 
 - **Backend:** Laravel 12, MySQL, Laravel Sanctum
 - **Frontend:** Next.js 16, TypeScript, Tailwind CSS, Axios
-- **External API:** RAWG Video Games Database API
+- **External API:** RAWG Video Games Database API (used for seeding only)
 
 ## Prerequisites
 
@@ -46,9 +46,21 @@ RAWG_API_KEY=your_rawg_api_key
 RAWG_BASE_URL=https://api.rawg.io/api
 ```
 
-Then run migrations and start the server:
+Create the MySQL database:
+```sql
+CREATE DATABASE rawg_app;
+```
+
+Run migrations and seed the database:
 ```bash
 php artisan migrate
+php artisan db:seed
+```
+
+> ⚠️ Seeding fetches ~500 games from the RAWG API including full game details. This may take 8-10 minutes. Do not interrupt the process.
+
+Start the backend server:
+```bash
 php artisan serve
 ```
 
@@ -60,7 +72,7 @@ cd Frontend/rawg-frontend
 npm install
 ```
 
-Create a `.env.local` file:
+Create a `.env.local` file in the frontend root:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ```
@@ -74,16 +86,73 @@ Frontend will run on http://localhost:3000
 
 ## Features
 
-- Browse games fetched live from the RAWG API
+- Browse ~500 games served from local MySQL database
 - Search games by name
 - Filter by genre and platform
 - Paginated game listing
-- Game detail page with screenshots, ratings, and description
+- Game detail page with rating, description, genres and platforms
 - User authentication (register, login, logout)
 - Add/remove games to favourites
-- Write, edit and delete game reviews
-- User dashboard with profile, favourites and reviews management
+- Write, edit and delete game reviews (1-10 rating scale)
+- User dashboard with profile editing, favourites and reviews management
+- Protected routes — dashboard requires authentication
+
+## Project Structure
+```
+rawg-app/
+├── Backend/
+│   └── rawg-backend/        # Laravel 12 API
+│       ├── app/
+│       │   ├── Http/Controllers/Api/
+│       │   ├── Models/
+│       │   └── Services/
+│       ├── database/
+│       │   ├── migrations/
+│       │   └── seeders/
+│       └── routes/
+│           └── api.php
+└── Frontend/
+    └── rawg-frontend/       # Next.js 16
+        ├── app/             # Pages (App Router)
+        ├── components/      # Reusable UI components
+        ├── contexts/        # React Context (Auth)
+        ├── lib/             # Axios API client
+        └── types/           # TypeScript interfaces
+```
 
 ## Database
 
-The app uses MySQL. Games are fetched live from the RAWG API and only stored locally when a user interacts with them (favouriting or reviewing).
+The app uses MySQL. Games are seeded from the RAWG API into the local database using `php artisan db:seed`. The RAWG API is **only used during seeding** — all game data is served from the local database during normal usage.
+
+### Entity Relationships
+
+- **One-to-One:** User ↔ Profile
+- **One-to-Many:** User → Reviews, User → Favourites
+- **Many-to-Many:** User ↔ Games (through favourites table)
+
+## API Endpoints
+
+### Public
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/register` | Register a new user |
+| POST | `/api/login` | Login |
+| GET | `/api/games` | List all games (search, filter, paginate) |
+| GET | `/api/games/{id}` | Get game details |
+| GET | `/api/genres` | List all genres |
+| GET | `/api/platforms` | List all platforms |
+| GET | `/api/games/{id}/reviews` | Get reviews for a game |
+
+### Protected (requires Bearer token)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/logout` | Logout |
+| GET | `/api/profile` | Get user profile |
+| POST | `/api/profile` | Create/update profile |
+| GET | `/api/favourites` | Get user favourites |
+| POST | `/api/favourites` | Add to favourites |
+| DELETE | `/api/favourites/{id}` | Remove from favourites |
+| GET | `/api/my-reviews` | Get user reviews |
+| POST | `/api/reviews` | Create a review |
+| PUT | `/api/reviews/{id}` | Update a review |
+| DELETE | `/api/reviews/{id}` | Delete a review |
