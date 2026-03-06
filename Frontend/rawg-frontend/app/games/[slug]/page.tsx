@@ -28,6 +28,11 @@ export default function GameDetailsPage() {
   const [isFavourited, setIsFavourited] = useState(false);
   const [isFavouriteLoading, setIsFavouriteLoading] = useState(false);
 
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || !game) {
       return;
@@ -209,7 +214,7 @@ export default function GameDetailsPage() {
 
         <div className="flex flex-wrap gap-4 text-sm mb-4">
           <span className="text-yellow-400">
-            ⭐ {game.rating.toFixed(1)} / 5
+            ⭐ {Number(game.rating).toFixed(1)} / 5
           </span>
           {game.metacritic && (
             <span className="bg-green-600 text-white px-2 py-0.5 rounded font-semibold">

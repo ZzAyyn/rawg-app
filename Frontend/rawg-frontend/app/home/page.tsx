@@ -104,7 +104,7 @@ export default function Home() {
         <TrueFocus
           sentence="Browse Games"
           manualMode={false}
-          blurAmount={5}
+          blurAmount={3}
           borderColor="#00FFFF"
           animationDuration={0.5}
           pauseBetweenAnimations={1}
@@ -168,7 +168,7 @@ export default function Home() {
 
       {isLoadingGames && (
         <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-cyan-500 animate-spin" />
         </div>
       )}
 

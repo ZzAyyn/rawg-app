@@ -32,7 +32,7 @@ export default function GameCard({ game }: { game: Game }) {
           <div className="flex items-center justify-between mt-2">
 
             <span className="text-yellow-400 text-xs">
-              ⭐ {game.rating.toFixed(1)}
+              ⭐ {Number(game.rating).toFixed(1)}
             </span>
 
 
