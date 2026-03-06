@@ -228,7 +228,7 @@ export default function GameDetailsPage() {
         </div>
 
         <div>
-          {game.genres.map((genre) => (
+          {(game.genres??[]).map ((genre) => (
             <span
               key={genre.id}
               className="bg-zinc-700 text-zinc-300 text-xs px-3 py-1 rounded-full"
@@ -239,7 +239,7 @@ export default function GameDetailsPage() {
         </div>
 
         <div>
-          {game.platforms.map(({ platform }) => (
+          {(game.platforms ?? []).map(({ platform }) => (
             <span
               key={platform.id}
               className="bg-zinc-800 text-zinc-400 text-xs px-3 py-1 rounded-full border border-zinc-700"

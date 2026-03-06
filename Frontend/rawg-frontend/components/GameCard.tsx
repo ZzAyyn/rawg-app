@@ -45,7 +45,7 @@ export default function GameCard({ game }: { game: Game }) {
 
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {game.genres.slice(0, 2).map((genre) => (
+            {(game.genres ?? []).slice(0, 2).map((genre) => (
               <span
                 key={genre.id}
                 className="bg-zinc-700 text-zinc-300 text-xs px-2 py-0.5 rounded-full"
