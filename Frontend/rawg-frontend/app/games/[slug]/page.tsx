@@ -42,8 +42,7 @@ export default function GameDetailsPage() {
       try {
         const response = await api.get("/favourites");
         const favourites = response.data;
-
-        const found = favourites.some((f: any) => f.game_id === game.id);
+        const found = favourites.some((f: any) => f.game?.slug === game?.slug);
         setIsFavourited(found);
       } catch (e: any) {
         console.error("Failed to check favourites", e);
