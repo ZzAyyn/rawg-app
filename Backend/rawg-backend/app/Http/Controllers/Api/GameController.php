@@ -3,77 +3,109 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\RawgService;
 use Illuminate\Http\Request;
+use App\Models\Game;
 
 class GameController extends Controller
 {
-    protected $rawgService;
+    public function index (Request $request) {
+        $query = Game::query();
 
-    public function __construct(RawgService $rawgService) {
-        $this->rawgService = $rawgService;
-    }
-
-    public function index(Request $request) {
-        $games = $this->rawgService->getGames(
-            page: $request->get("page",1),
-            pageSize: $request->get('page_size', 20), 
-            search: $request->get('search'),
-            ordering: $request->get('ordering'),
-            genres: $request->get('genres'),
-            platforms: $request->get('platforms'),
-        );
-
-        if (!$games) {
-            return response()->json ([
-                'status' => 'error - Failed to fetch games',
-            ], 500);
+        // search feature using name
+        if ($request -> has('search') && $request -> search) {
+            $query -> where('name', 'like', '%' . $request -> search . '%');
         }
 
-        return response()->json($games);
+        // filter using genre
+        if ($request -> has('genres') && $request -> genres) {
+            $query -> whereJsonContains('genres', ['slug' => $request -> genres]);
+        }
+
+        // filter using platform id
+        if ($request ->has('platforms') && $request -> platforms) {
+            $query -> whereJsonContains('platforms', [
+                'platform' => ['id' => (int) $request -> platforms]
+            ]);
+        }
+
+        $query -> orderBy('rating', 'desc');
+
+        $pageSize = $request -> get('page_size', 20);
+        $games = $query -> paginate($pageSize);
+
+        return response() -> json ([
+            'count' => $games -> total(),
+            'next' => $games -> nextPageUrl(),
+            'previous' => $games -> previousPageUrl(),
+            'results' => $games -> items(),
+        ]);
     }
 
     public function show($id) {
-        $game = $this->rawgService->getGame($id);
-
+        $game = Game::where('slug', $id)
+            ->orWhere('rawg_id', $id)
+            ->first();
+        
         if (!$game) {
-            return response()->json([
-                'status'=> 'Game does not exist!',
+            return response() -> json([
+                'status' => 'Game does not exist!',
             ], 404);
         }
-        return response()->json($game);
+
+        return response()->json([
+            'id' => $game->rawg_id,
+            'slug' => $game->slug,
+            'name' => $game->name,
+            'description_raw' => $game->description,
+            'background_image' => $game->background_image,
+            'rating' => $game->rating,
+            'released' => $game->released,
+            'platforms' => $game->platforms,
+            'genres' => $game->genres,
+            'metacritic' => null,
+        ]);
     }
 
     public function screenshots($id) {
-        $screenshots = $this->rawgService->getGameScreenshots($id);
-        if(!$screenshots) {
+        $game = Game::where('slug', $id)
+            ->orWhere('rawg_id', $id)
+            ->first();
+
+        if (!$game) {
             return response()->json([
-                'status'=> 'Game screenshots cannot be fetched or is unavailable',
+                'status' => 'Game not found',
             ], 404);
         }
 
-        return response()->json($screenshots);
+        return response()->json([
+            'results' => $game->screenshots ?? [],
+        ]);
     }
 
     public function genres() {
-        $genres = $this->rawgService->getGenres();
-        if(!$genres) {
-            return response()->json([
-                'status'=> 'Game genre cannot be fetched',
-            ], 500);
-        }
+        $genres = Game::whereNotNull('genres')
+            ->get()
+            ->pluck('genres')
+            ->flatten(1)
+            ->unique('id')
+            ->values();
 
-        return response()->json($genres);
+        return response()->json([
+            'results' => $genres,
+        ]);
     }
 
     public function platforms() {
-        $platforms = $this->rawgService->getPlatforms();
-        if(!$platforms) {
-            return response()->json([
-                'status'=> 'Game platforms cannot be fetched',
-            ], 500);
-        }
+        $platforms = Game::whereNotNull('platforms')
+            ->get()
+            ->pluck('platforms')
+            ->flatten(1)
+            ->map(fn($p) => $p['platform'] ?? $p)
+            ->unique('id')
+            ->values();
 
-        return response()->json($platforms);
+        return response()->json([
+            'results' => $platforms,
+        ]);
     }
 }
