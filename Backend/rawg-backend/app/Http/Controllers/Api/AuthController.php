@@ -63,7 +63,54 @@ class AuthController extends Controller
     }
 
     public function user(Request $request){
-        return response()->json($request->user());
+        return response() -> json([
+            'id' => $request -> user() -> id,
+            'name' => $request -> user() -> name,
+            'email' => $request -> user() -> email,
+            'email_notifications' => $request -> user() -> email_notifications,
+            'created_at' => $request -> user() -> created_at,
+        ]);
+    }
+
+    public function unsubscribe (Request $request) {
+        $token = $request -> query('token');
+
+        if (!$token) {
+            return response() -> json([
+                'status' => 'Invalid unsubscribe link.',
+            ], 400);
+        }
+
+        $user = User::where('unsubscribe_token', $token) -> first();
+
+        if(!$user) {
+            return response() -> json([
+                'status' => 'Invalid unsubscribe link.',
+            ], 404);
+        }
+
+        $user -> update([
+            'email_notifications' => false,
+        ]);
+
+        return response() -> json([
+            'status' => 'You have been unsubscribed from weekly notifications.',
+        ]);
+    }
+
+    public function updateEmailPreferences(Request $request) {
+        $request -> validate([
+            'email_notifications' => 'required|boolean',
+        ]);
+
+        $request -> user() -> update([
+            'email_notifications' => $request -> email_notifications,
+        ]);
+
+        return response() -> json([
+            'status' => 'Email preferences updated successfully.',
+            'email_notifications' => $request -> user() -> email_notifications,
+        ]);
     }
 
 }

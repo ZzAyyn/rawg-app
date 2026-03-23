@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
+import BackgroundEffects from "@/components/BackgroundEffects";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased pt-10`}
       >
         <AuthProvider>
+          <BackgroundEffects />
           <ConditionalNavbar />
           {children}
         </AuthProvider>

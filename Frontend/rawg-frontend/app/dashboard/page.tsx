@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [isSavingEmailPref, setIsSavingEmailPref] = useState(false);
+  const [emailPrefSuccess, setEmailPrefSuccess] = useState(false);
 
   // Favourites related usestates
   const [favourites, setFavourites] = useState<Favourite[]>([]);
@@ -35,7 +38,7 @@ export default function DashboardPage() {
   const [editRating, setEditRating] = useState<number>(5);
   const [editText, setEditText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
 
   // useEffect to fetch profile
@@ -47,6 +50,9 @@ export default function DashboardPage() {
         setBio(response.data.bio ?? "");
         setLocation(response.data.location ?? "");
         setWebsite(response.data.website ?? "");
+
+        const userResponse = await api.get("/user");
+        setEmailNotifications(userResponse.data.email_notifications);
       } catch {
       } finally {
         setIsLoadingProfile(false);
@@ -88,6 +94,26 @@ export default function DashboardPage() {
     fetchReviews();
   }, []);
 
+  // handler function to update email preferences of users
+  const handleUpdateEmailPreferences = async () => {
+    setIsSavingEmailPref(true);
+    setEmailPrefSuccess(false);
+
+    try {
+      await api.post("/email-preferences", {
+        email_notifications: !emailNotifications,
+      });
+
+      setEmailNotifications((prev) => !prev);
+      setEmailPrefSuccess(true);
+      setTimeout(() => setEmailPrefSuccess(false), 3000);
+    } catch (e) {
+      console.error("Failed to update email preferences", e);
+    } finally {
+      setIsSavingEmailPref(false);
+    }
+  };
+
   // Save Profile
   const handleSaveProfile = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -110,7 +136,7 @@ export default function DashboardPage() {
     try {
       await api.delete(`/favourites/${rawgId}`);
       setFavourites((prev) => prev.filter((f) => f.game?.rawg_id !== rawgId));
-    } catch (e){
+    } catch (e) {
       console.error("Failed to remove favourite", e);
     }
   };
@@ -153,7 +179,7 @@ export default function DashboardPage() {
       await api.delete(`/reviews/${deleteReviewId}`);
       setReviews((prev) => prev.filter((r) => r.id !== deleteReviewId));
     } catch {
-      console.error('Failed to delete review');
+      console.error("Failed to delete review");
     } finally {
       setDeleteReviewId(null);
     }
@@ -184,96 +210,155 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {activeTab === 'profile' && (
+          {/* PROFILE TAB */}
+          {activeTab === "profile" && (
             <div>
               {isLoadingProfile ? (
                 <div className="flex justify-center py-12">
                   <div className="w-8 h-8 border-2 border-cyan-500 animate-spin" />
                 </div>
               ) : (
-                <form onSubmit={handleSaveProfile} className="flex flex-col gap-5 max-w-lg">
-                  {profileSuccess && (
-                    <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm px-4 py-3 rounded-lg">
-                      Profile saved successfully!
-                    </div>
-                  )}
-
-                  {profileError && (
-                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
-                      {profileError}
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-zinc-400 text-sm">Name</label>
-                    <input 
-                      type="text"
-                      value={user?.name ?? ''}
-                      disabled
-                      className="bg-zinc-800/50 text-zinc-500 px-4 py-2.5 rounded-lg border border-zinc-700 cursor-not-allowed" 
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-zinc-400 text-sm">Email</label>
-                    <input 
-                      type="text"
-                      value={user?.email ?? ''}
-                      disabled
-                      className="bg-zinc-800/50 text-zinc-500 px-4 py-2.5 rounded-lg border border-zinc-700 cursor-not-allowed" 
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-zinc-400 text-sm">Bio</label>
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      rows={3}
-                      placeholder="Tell us about yourself..."
-                      className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors resize-none" 
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-zinc-400 text-sm">Location</label>
-                    <input 
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="e.g. Russia"
-                      className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-2.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors" 
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-zinc-400 text-sm">Website</label>
-                    <input 
-                      type="url"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="https://yourwebsite.com"
-                      className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-2.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors" 
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSavingProfile}
-                    className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors"
+                <>
+                  <form
+                    onSubmit={handleSaveProfile}
+                    className="flex flex-col gap-5 max-w-lg"
                   >
-                    {isSavingProfile ? 'Saving...' : 'Save Profile'}      
-                  </button>
-                </form>
+                    {profileSuccess && (
+                      <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm px-4 py-3 rounded-lg">
+                        Profile saved successfully!
+                      </div>
+                    )}
+
+                    {profileError && (
+                      <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
+                        {profileError}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-zinc-400 text-sm">Name</label>
+                      <input
+                        type="text"
+                        value={user?.name ?? ""}
+                        disabled
+                        className="bg-zinc-800/50 text-zinc-500 px-4 py-2.5 rounded-lg border border-zinc-700 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-zinc-400 text-sm">Email</label>
+                      <input
+                        type="text"
+                        value={user?.email ?? ""}
+                        disabled
+                        className="bg-zinc-800/50 text-zinc-500 px-4 py-2.5 rounded-lg border border-zinc-700 cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-zinc-400 text-sm">Bio</label>
+                      <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        rows={3}
+                        placeholder="Tell us about yourself..."
+                        className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-3 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-zinc-400 text-sm">Location</label>
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. Russia"
+                        className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-2.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-zinc-400 text-sm">Website</label>
+                      <input
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="https://yourwebsite.com"
+                        className="bg-zinc-800 text-white placeholder-zinc-600 px-4 py-2.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSavingProfile}
+                      className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-colors"
+                    >
+                      {isSavingProfile ? "Saving..." : "Save Profile"}
+                    </button>
+                  </form>
+
+                  {/* Email Preferences — outside the form */}
+                  <div className="mt-8 pt-6 border-t border-zinc-800 max-w-lg">
+                    <h3 className="text-white font-semibold mb-1">
+                      Email Preferences
+                    </h3>
+                    <p className="text-zinc-500 text-sm mb-4">
+                      Manage your weekly game recommendation emails.
+                    </p>
+
+                    <div
+                      className="flex items-center justify-between p-4 rounded-xl"
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          Weekly Recommendations
+                        </p>
+                        <p className="text-zinc-500 text-xs mt-0.5">
+                          Receive personalised game picks every week
+                        </p>
+                      </div>
+
+                      {/* Toggle switch */}
+                      <button
+                        onClick={handleUpdateEmailPreferences}
+                        disabled={isSavingEmailPref}
+                        className="relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
+                        style={{
+                          background: emailNotifications
+                            ? "rgb(6, 182, 212)"
+                            : "rgba(255,255,255,0.1)",
+                        }}
+                      >
+                        <span
+                          className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300"
+                          style={{
+                            left: emailNotifications ? "28px" : "4px",
+                          }}
+                        />
+                      </button>
+                    </div>
+
+                    {emailPrefSuccess && (
+                      <p className="text-green-400 text-xs mt-2">
+                         Email preferences updated!
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}
 
-          {activeTab === 'favourites' && (
+          {/* FAVOURITES TAB */}
+          {activeTab === "favourites" && (
             <div>
               {isLoadingFavourites ? (
                 <div className="flex justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-cyan-500 animate-spin"/>
+                  <div className="w-8 h-8 border-2 border-cyan-500 animate-spin" />
                 </div>
               ) : favourites.length === 0 ? (
                 <div className="text-center py-12">
@@ -297,7 +382,7 @@ export default function DashboardPage() {
                           <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0">
                             <Image
                               src={favourite.game.background_image}
-                              alt={favourite.game?.name ?? 'Game'}
+                              alt={favourite.game?.name ?? "Game"}
                               fill
                               className="object-cover"
                             />
@@ -305,18 +390,22 @@ export default function DashboardPage() {
                         )}
                         <div>
                           <p className="text-white font-medium">
-                            {favourite.game?.name ?? `Game #${favourite.game_id}`}
+                            {favourite.game?.name ??
+                              `Game #${favourite.game_id}`}
                           </p>
                         </div>
                       </div>
 
                       <button
-                        onClick={() => handleRemoveFavourite(favourite.game?.rawg_id ?? favourite.game_id)}
+                        onClick={() =>
+                          handleRemoveFavourite(
+                            favourite.game?.rawg_id ?? favourite.game_id,
+                          )
+                        }
                         className="text-red-400 hover:text-red-300 text-sm transition-colors"
                       >
                         Remove
                       </button>
-
                     </div>
                   ))}
                 </div>
@@ -324,15 +413,18 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {activeTab === 'reviews' && (
+          {/* REVIEWS TAB */}
+          {activeTab === "reviews" && (
             <div>
               {isLoadingReviews ? (
                 <div className="flex justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-cyan-500 animate-spin"/>
+                  <div className="w-8 h-8 border-2 border-cyan-500 animate-spin" />
                 </div>
               ) : reviews.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-zinc-500 mb-4">You haven't reviewed any games yet.</p>
+                  <p className="text-zinc-500 mb-4">
+                    You haven't reviewed any games yet.
+                  </p>
                   <Link
                     href="/home"
                     className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg transition-colors inline-block"
@@ -355,14 +447,19 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col gap-1.5">
                             <label className="text-zinc-400 text-sm">
-                              Rating: <span className="text-white font-semibold">{editRating} / 10</span>
+                              Rating:{" "}
+                              <span className="text-white font-semibold">
+                                {editRating} / 10
+                              </span>
                             </label>
-                            <input 
+                            <input
                               type="range"
                               min={1}
                               max={10}
                               value={editRating}
-                              onChange={(e) => setEditRating(Number(e.target.value))}
+                              onChange={(e) =>
+                                setEditRating(Number(e.target.value))
+                              }
                               className="accent-cyan-500"
                             />
                           </div>
@@ -380,7 +477,7 @@ export default function DashboardPage() {
                               disabled={isUpdating}
                               className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg transition-colors"
                             >
-                              {isUpdating ? 'Saving...' : 'Save'}
+                              {isUpdating ? "Saving..." : "Save"}
                             </button>
                             <button
                               onClick={() => setEditingReviewId(null)}
@@ -389,13 +486,13 @@ export default function DashboardPage() {
                               Cancel
                             </button>
                           </div>
-
-
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span>{review.rating} / 10</span>
+                            <span className="text-white text-sm">
+                              {review.rating} / 10
+                            </span>
                             <div className="flex gap-3">
                               <button
                                 onClick={() => handleEditReview(review)}
@@ -411,11 +508,14 @@ export default function DashboardPage() {
                               </button>
                             </div>
                           </div>
-                          <p className="text-zinc-300 text-sm leading-relaxed">{review.review_text}</p>
-                          <p className="text-zinc-300 text-sm leading-relaxed">{new Date(review.created_at).toLocaleDateString()}</p>
+                          <p className="text-zinc-300 text-sm leading-relaxed">
+                            {review.review_text}
+                          </p>
+                          <p className="text-zinc-500 text-xs mt-1">
+                            {new Date(review.created_at).toLocaleDateString()}
+                          </p>
                         </div>
                       )}
-
                     </div>
                   ))}
                 </div>
@@ -424,17 +524,22 @@ export default function DashboardPage() {
           )}
         </main>
 
+        {/* Delete Review Modal */}
         {deleteReviewId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setDeleteReviewId(null)}
             />
-
             <div className="relative bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm shadow-xl">
-              <h3 className="text-white text-lg font-semibold mb-2">Delete Review</h3>
+              <h3 className="text-white text-lg font-semibold mb-2">
+                Delete Review
+              </h3>
               <p className="text-zinc-400 text-sm mb-6">
-                Are you sure you want to delete this review? <span className="text-red-400 font-semibold">This action cannot be undone.</span>
+                Are you sure you want to delete this review?{" "}
+                <span className="text-red-400 font-semibold">
+                  This action cannot be undone.
+                </span>
               </p>
               <div className="flex gap-3">
                 <button
@@ -450,11 +555,9 @@ export default function DashboardPage() {
                   Delete
                 </button>
               </div>
-
             </div>
           </div>
         )}
-        
       </ProtectedRoute>
     </div>
   );

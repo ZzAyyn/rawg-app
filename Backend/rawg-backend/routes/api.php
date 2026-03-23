@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\ReviewController;
 
 Route::post('/register', [AuthController::class,'register']);
@@ -20,6 +21,7 @@ Route::get('/platforms', [GameController::class, 'platforms']);
 
 Route::get('/games/{gameId}/reviews', [ReviewController::class,'index']);
 Route::get('/reviews/{id}', [ReviewController::class,'show']);
+Route::get('/unsubscribe', [AuthController::class, 'unsubscribe']);
 
 Route::middleware('auth:sanctum')->group(function(){
     Route::post('/logout', [AuthController::class,'logout']);
@@ -37,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::post('/reviews', [ReviewController::class,'store']);
     Route::put('/reviews/{id}', [ReviewController::class,'update']);
     Route::delete('/reviews/{id}', [ReviewController::class,'destroy']);
+
+    Route::get('/recommendations', [RecommendationController::class, 'index']);
+
+    Route::post('/email-preferences', [AuthController::class, 'updateEmailPreferences']);
 });
 
 
