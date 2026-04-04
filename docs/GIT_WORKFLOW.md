@@ -46,8 +46,12 @@ In the interactive editor, all commits except the first were marked as `squash` 
 feat: game recommendation system
 ```
 
-### Screenshots
+### Screenshots (These are in screenshots folder)
 
-> Add screenshot of branch showing commits before squashing here.
+Before squashing.
 
-> Add screenshot of final squashed commit here.
+![alt text](./screenshots/before.png)
+
+After squashing.
+
+![alt text](./screenshots/after.png)
